@@ -1,7 +1,9 @@
 
 #include "Character/SCharacter.h"
+#include "Projectile/SMagicProjectile.h"
 
 #include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "EnhancedInputSubsystems.h"
@@ -13,10 +15,14 @@ ASCharacter::ASCharacter()
 
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>("SpringArmComp");
 	SpringArmComp->SetupAttachment(GetRootComponent());
+	SpringArmComp->bUsePawnControlRotation = true;
 
 	CameraComp = CreateDefaultSubobject<UCameraComponent>("CameraComp");
 	CameraComp->SetupAttachment(SpringArmComp);
+	CameraComp->bUsePawnControlRotation = false;
 
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	bUseControllerRotationYaw = false;
 }
 
 void ASCharacter::BeginPlay()
@@ -44,6 +50,8 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInput->BindAction(TurnAction, ETriggerEvent::Triggered, this, &ASCharacter::Turn);
 	PlayerInput->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 	PlayerInput->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+
+	PlayerInput->BindAction(PrimaryAttackAction, ETriggerEvent::Started, this, &ASCharacter::PrimaryAttack);
 
 }
 
@@ -80,5 +88,18 @@ void ASCharacter::Turn(const FInputActionValue& Value)
 
 	AddControllerYawInput(TurnValue.X);
 	AddControllerPitchInput(TurnValue.Y * -1);
+}
+
+void ASCharacter::PrimaryAttack()
+{
+	checkf(MagicProjectileClass, TEXT("Set MagicProjectileClass in BP_SCharacter. MagicProjectileClass is nullptr"));
+	
+	const FVector HandLocation = GetMesh()->GetSocketLocation(FName("Muzzle_01"));
+	const FTransform SpawnTransform = FTransform(GetControlRotation(), HandLocation); // GetControlRotation is where the camera is looking
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	GetWorld()->SpawnActor<ASMagicProjectile>(MagicProjectileClass,SpawnTransform, SpawnParams);
 }
 
