@@ -9,6 +9,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
+class ASMagicProjectile;
 
 
 
@@ -40,6 +41,7 @@ private:
 	void Move(const FInputActionValue& Value);
 	void Turn(const FInputActionValue& Value);
 
+	void PrimaryAttack();
 
 	//=====================
 	// COMPONENTS
@@ -69,4 +71,16 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> JumpAction;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> PrimaryAttackAction;
+
+	//=====================
+	// ACTORS
+	//=====================
+
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	TSubclassOf<ASMagicProjectile> MagicProjectileClass;
+
+	UPROPERTY()
+	TObjectPtr<ASMagicProjectile> MagicProjectile;
 };
