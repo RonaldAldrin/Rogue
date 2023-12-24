@@ -1,6 +1,7 @@
 
 #include "Character/SCharacter.h"
 #include "Projectile/SMagicProjectile.h"
+#include "Character/SInteractionComponent.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -20,6 +21,8 @@ ASCharacter::ASCharacter()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>("CameraComp");
 	CameraComp->SetupAttachment(SpringArmComp);
 	CameraComp->bUsePawnControlRotation = false;
+
+	InteractionComp = CreateDefaultSubobject<USInteractionComponent>("InteractionComp");
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bUseControllerRotationYaw = false;
@@ -52,6 +55,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInput->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 	PlayerInput->BindAction(PrimaryAttackAction, ETriggerEvent::Started, this, &ASCharacter::PrimaryAttack);
+	PlayerInput->BindAction(PrimaryInteractAction, ETriggerEvent::Started, this, &ASCharacter::PrimaryInteract);
 
 }
 
@@ -93,13 +97,28 @@ void ASCharacter::Turn(const FInputActionValue& Value)
 void ASCharacter::PrimaryAttack()
 {
 	checkf(MagicProjectileClass, TEXT("Set MagicProjectileClass in BP_SCharacter. MagicProjectileClass is nullptr"));
+
+	PlayAnimMontage(AttackMontage);
 	
+	
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed, 0.2f);
+
+}
+
+void ASCharacter::PrimaryAttack_TimeElapsed()
+{
+
 	const FVector HandLocation = GetMesh()->GetSocketLocation(FName("Muzzle_01"));
 	const FTransform SpawnTransform = FTransform(GetControlRotation(), HandLocation); // GetControlRotation is where the camera is looking
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	GetWorld()->SpawnActor<ASMagicProjectile>(MagicProjectileClass,SpawnTransform, SpawnParams);
+	GetWorld()->SpawnActor<ASMagicProjectile>(MagicProjectileClass, SpawnTransform, SpawnParams);
+}
+
+void ASCharacter::PrimaryInteract()
+{
+	InteractionComp->PrimaryInteract();
 }
 
