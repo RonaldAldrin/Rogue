@@ -7,9 +7,11 @@
 
 class USpringArmComponent;
 class UCameraComponent;
+class USInteractionComponent;
 class UInputMappingContext;
 class UInputAction;
 class ASMagicProjectile;
+class UAnimMontage;
 
 
 
@@ -42,6 +44,8 @@ private:
 	void Turn(const FInputActionValue& Value);
 
 	void PrimaryAttack();
+	void PrimaryAttack_TimeElapsed();
+	void PrimaryInteract();
 
 	//=====================
 	// COMPONENTS
@@ -52,6 +56,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCameraComponent> CameraComp;
+
+	TObjectPtr<USInteractionComponent> InteractionComp;
 
 
 
@@ -74,6 +80,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> PrimaryAttackAction;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> PrimaryInteractAction;
+
 	//=====================
 	// ACTORS
 	//=====================
@@ -83,4 +92,17 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<ASMagicProjectile> MagicProjectile;
+
+	//=====================
+	// Animation Montages
+	//=====================
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montage")
+	TObjectPtr<UAnimMontage> AttackMontage;
+
+	//=====================
+	// Variables
+	//==================
+
+	FTimerHandle TimerHandle_PrimaryAttack;
 };
