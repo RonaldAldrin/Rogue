@@ -2,6 +2,7 @@
 
 
 #include "Actors/Explosive.h"
+#include "Character/SCharacter.h"
 
 #include "PhysicsEngine/RadialForceComponent.h"
 
@@ -20,7 +21,7 @@ AExplosive::AExplosive()
 	RadialForceComp->bImpulseVelChange = true;
 	RadialForceComp->ImpulseStrength = 2000.f;
 	RadialForceComp->ForceStrength = 50.f;
-	RadialForceComp->Radius = 200.f;
+	RadialForceComp->Radius = 400.f;
 	
 }
 
@@ -33,7 +34,11 @@ void AExplosive::BeginPlay()
 
 void AExplosive::Explode(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	RadialForceComp->FireImpulse();
+	ASCharacter* Character = Cast<ASCharacter>(OtherActor);
+	if (OtherActor != Character)
+	{
+		RadialForceComp->FireImpulse();
+	}
 }
 
 
