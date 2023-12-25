@@ -4,6 +4,8 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Particles/ParticleSystem.h"
+#include "Kismet/GameplayStatics.h"
 
 ASMagicProjectile::ASMagicProjectile()
 {
@@ -28,7 +30,21 @@ ASMagicProjectile::ASMagicProjectile()
 void ASMagicProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SphereComp->IgnoreActorWhenMoving(GetInstigator(), true);
+
+	SphereComp->OnComponentHit.AddDynamic(this, &ASMagicProjectile::DestroyProjectile);
 	
+}
+
+void ASMagicProjectile::DestroyProjectile(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (OtherActor != GetInstigator())
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitEffect, GetActorLocation(), GetActorRotation(),false);
+
+		Destroy();
+	}
 }
 
 void ASMagicProjectile::Tick(float DeltaTime)

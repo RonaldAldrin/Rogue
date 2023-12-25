@@ -58,9 +58,16 @@ void USInteractionComponent::PrimaryInteract()
 	{
 		if (AActor* HitActor = Hit.GetActor())
 		{
-			if (ISGameplayInterface* GameplayInterface = Cast<ISGameplayInterface>(HitActor))
+			/*if (ISGameplayInterface* GameplayInterface = Cast<ISGameplayInterface>(HitActor))
 			{
-				GameplayInterface->Execute_Interact(HitActor, MyPawn);
+				GameplayInterface->Interact_Implementation(MyPawn);
+				break;
+			}*/
+
+			//// this method is working when implementing the interface in blueprint
+			if (HitActor->Implements<USGameplayInterface>())
+			{
+				ISGameplayInterface::Execute_Interact(HitActor, MyPawn);
 				break;
 			}
 		}
@@ -68,7 +75,5 @@ void USInteractionComponent::PrimaryInteract()
 	}
 
 	DrawDebugLine(GetWorld(), EyeLocation, End, LineColor, false, 2.f,0,2.f);
-
-	
 }
 

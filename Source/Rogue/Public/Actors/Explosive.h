@@ -25,7 +25,7 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UStaticMeshComponent> BaseMesh;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class URadialForceComponent> RadialForceComp;
 
 };
