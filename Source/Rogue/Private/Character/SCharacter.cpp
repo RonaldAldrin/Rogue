@@ -2,13 +2,15 @@
 #include "Character/SCharacter.h"
 #include "Projectile/SMagicProjectile.h"
 #include "Character/SInteractionComponent.h"
+#include "Character/SAttributesComponent.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 ASCharacter::ASCharacter()
 {
@@ -17,12 +19,15 @@ ASCharacter::ASCharacter()
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>("SpringArmComp");
 	SpringArmComp->SetupAttachment(GetRootComponent());
 	SpringArmComp->bUsePawnControlRotation = true;
+	SpringArmComp->SocketOffset = FVector(0.f, 80.f, 10.f);
+
 
 	CameraComp = CreateDefaultSubobject<UCameraComponent>("CameraComp");
-	CameraComp->SetupAttachment(SpringArmComp);
+	CameraComp->SetupAttachment(SpringArmComp,USpringArmComponent::SocketName);
 	CameraComp->bUsePawnControlRotation = false;
 
 	InteractionComp = CreateDefaultSubobject<USInteractionComponent>("InteractionComp");
+	AttributeComp = CreateDefaultSubobject<USAttributesComponent>("AttributeComp");
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bUseControllerRotationYaw = false;
@@ -96,7 +101,7 @@ void ASCharacter::Turn(const FInputActionValue& Value)
 
 void ASCharacter::PrimaryAttack()
 {
-	checkf(MagicProjectileClass, TEXT("Set MagicProjectileClass in BP_SCharacter. MagicProjectileClass is nullptr"));
+	//checkf(PrimaryProjectileClass, TEXT("Set MagicProjectileClass in BP_SCharacter. MagicProjectileClass is nullptr"));
 
 	PlayAnimMontage(AttackMontage);
 	
@@ -107,19 +112,51 @@ void ASCharacter::PrimaryAttack()
 
 void ASCharacter::PrimaryAttack_TimeElapsed()
 {
+	FHitResult CameraHitResult;
 
-	const FVector HandLocation = GetMesh()->GetSocketLocation(FName("Muzzle_01"));
-	const FTransform SpawnTransform = FTransform(GetControlRotation(), HandLocation); // GetControlRotation is where the camera is looking
+	CameraLineTrace(CameraHitResult);
 
+	const FVector HandSocketLocation = GetMesh()->GetSocketLocation(FName("Muzzle_01"));
+	
+	FRotator Rotation = (AdjustedTraceEnd - HandSocketLocation).Rotation(); // Similar to UKismetMathLibrary::FindLookAtRotation
+	const FTransform SpawnTransform = FTransform(Rotation, HandSocketLocation); // GetControlRotation is where the camera is looking
+	
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnParams.Instigator = this;
 
-	GetWorld()->SpawnActor<ASMagicProjectile>(MagicProjectileClass, SpawnTransform, SpawnParams);
+	if (ensure(PrimaryProjectileClass))
+	{
+		PrimaryProjectile = GetWorld()->SpawnActor<ASMagicProjectile>(PrimaryProjectileClass, SpawnTransform, SpawnParams);
+	}
+	
+	
+
+	
 }
 
 void ASCharacter::PrimaryInteract()
 {
 	InteractionComp->PrimaryInteract();
+}
+
+void ASCharacter::CameraLineTrace(FHitResult HitResult)
+{
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	//FVector TraceDirection = GetControlRotation().Vector();
+
+	const FVector TraceStart = GetCameraComp()->GetComponentLocation(); //+ (TraceDirection * 15.f);
+	const FVector TraceEnd = TraceStart + (GetCameraComp()->GetForwardVector() * 5000.f);
+	
+
+	AdjustedTraceEnd = TraceEnd;
+
+	if (bool bBlockingHit = GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, Params))
+	{
+		AdjustedTraceEnd = HitResult.ImpactPoint;
+	}
+
 }
 

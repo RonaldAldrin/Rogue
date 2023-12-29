@@ -8,9 +8,10 @@
 class USpringArmComponent;
 class UCameraComponent;
 class USInteractionComponent;
+class USAttributesComponent;
 class UInputMappingContext;
 class UInputAction;
-class ASMagicProjectile;
+class ASProjectileBase;
 class UAnimMontage;
 
 
@@ -47,6 +48,8 @@ private:
 	void PrimaryAttack_TimeElapsed();
 	void PrimaryInteract();
 
+	void CameraLineTrace(FHitResult HitResult);
+
 	//=====================
 	// COMPONENTS
 	//=====================
@@ -57,9 +60,15 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCameraComponent> CameraComp;
 
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USInteractionComponent> InteractionComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USAttributesComponent> AttributeComp;
 
+
+
+	FVector AdjustedTraceEnd;
 
 	//=====================
 	// INPUTS
@@ -88,10 +97,10 @@ private:
 	//=====================
 
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-	TSubclassOf<ASMagicProjectile> MagicProjectileClass;
+	TSubclassOf<ASProjectileBase> PrimaryProjectileClass;
 
 	UPROPERTY()
-	TObjectPtr<ASMagicProjectile> MagicProjectile;
+	TObjectPtr<ASProjectileBase> PrimaryProjectile;
 
 	//=====================
 	// Animation Montages
@@ -105,4 +114,9 @@ private:
 	//==================
 
 	FTimerHandle TimerHandle_PrimaryAttack;
+	
+
+public:
+
+	FORCEINLINE UCameraComponent* GetCameraComp() const { return CameraComp; }
 };

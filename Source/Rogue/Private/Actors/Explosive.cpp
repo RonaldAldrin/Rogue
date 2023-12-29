@@ -3,6 +3,7 @@
 
 #include "Actors/Explosive.h"
 #include "Character/SCharacter.h"
+#include "Character/SAttributesComponent.h"
 
 #include "PhysicsEngine/RadialForceComponent.h"
 
@@ -25,19 +26,41 @@ AExplosive::AExplosive()
 	
 }
 
+
 void AExplosive::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	
+}
+
+void AExplosive::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
 	BaseMesh->OnComponentHit.AddDynamic(this, &AExplosive::Explode);
 }
+
 
 void AExplosive::Explode(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	ASCharacter* Character = Cast<ASCharacter>(OtherActor);
-	if (OtherActor != Character)
+	if (OtherActor)
 	{
-		RadialForceComp->FireImpulse();
+		if (OtherActor != Character)
+		{
+			RadialForceComp->FireImpulse();
+
+			USAttributesComponent* AttributeComp = Cast<USAttributesComponent>(OtherActor->GetComponentByClass(USAttributesComponent::StaticClass()));
+			if (AttributeComp)
+			{
+				AttributeComp->ApplyHealthChange(-10);
+
+			}
+
+			
+		}
+		UE_LOG(LogTemp, Warning, TEXT("BeginOverlap %s"), *OtherActor->GetName());
+		
 	}
 }
 
