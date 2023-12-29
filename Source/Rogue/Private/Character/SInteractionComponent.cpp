@@ -1,8 +1,10 @@
 
 
 #include "Character/SInteractionComponent.h"
+#include "Character/SCharacter.h"
 
 #include "Interface/SGameplayInterface.h"
+#include "Camera/CameraComponent.h"
 
 USInteractionComponent::USInteractionComponent()
 {
@@ -32,15 +34,20 @@ void USInteractionComponent::PrimaryInteract()
 
 	AActor* MyOwner = GetOwner();
 	APawn* MyPawn = Cast<APawn>(MyOwner);
+
+	ASCharacter* MyCharacter = Cast<ASCharacter>(MyOwner);
+
 	FRotator EyeRotation2 = MyPawn->GetViewRotation();
 
 	FVector EyeLocation;
 	FRotator EyeRotation;
 	MyOwner->GetActorEyesViewPoint(EyeLocation,EyeRotation); 
 
+	UCameraComponent* MyCamera = MyCharacter->GetCameraComp();
 
-	const FVector End =  EyeLocation + (EyeRotation2.Vector() * 1000.f);
-	
+	//const FVector End =  EyeLocation + (EyeRotation2.Vector() * 1000.f);
+	const FVector Start = MyCamera->GetComponentLocation();
+	const FVector End = Start + (MyCamera->GetForwardVector() * 500.f);
 	
 	//FHitResult Hit;
 	//bool bBlockingHit = GetWorld()->LineTraceSingleByObjectType(Hit, EyeLocation, End, ObjectQueryParams);
@@ -50,7 +57,7 @@ void USInteractionComponent::PrimaryInteract()
 
 	FCollisionShape Shape;
 	Shape.SetSphere(30.f);
-	bool bBlockingHit = GetWorld()->SweepMultiByObjectType(Hits, EyeLocation, End, FQuat::Identity, ObjectQueryParams,Shape);
+	bool bBlockingHit = GetWorld()->SweepMultiByObjectType(Hits, Start, End, FQuat::Identity, ObjectQueryParams, Shape);
 
 	FColor LineColor = bBlockingHit ? FColor::Green : FColor::Red;
 
@@ -74,6 +81,6 @@ void USInteractionComponent::PrimaryInteract()
 		DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 30.f, 12,LineColor, false, 2.f);
 	}
 
-	DrawDebugLine(GetWorld(), EyeLocation, End, LineColor, false, 2.f,0,2.f);
+	DrawDebugLine(GetWorld(), Start, End, LineColor, false, 12.f,0,2.f);
 }
 

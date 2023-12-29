@@ -14,6 +14,8 @@ class ROGUE_API AExplosive : public AActor
 public:	
 	AExplosive();
 
+	virtual void PostInitializeComponents() override;
+
 protected:
 	virtual void BeginPlay() override;
 
